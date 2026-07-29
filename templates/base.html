@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}clinic_ai{% endblock %}</title>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f0f2f5;
+            color: #1a1a2e;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+        .auth-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,.08);
+            padding: 2.5rem 2rem;
+            width: 100%;
+            max-width: 400px;
+        }
+        .auth-card h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+            text-align: center;
+        }
+        .auth-card .subtitle {
+            color: #65676b;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 0.3rem;
+            color: #333;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 0.65rem 0.75rem;
+            border: 1px solid #ccd0d5;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: border-color .15s, box-shadow .15s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #1877f2;
+            box-shadow: 0 0 0 3px rgba(24,119,242,.15);
+        }
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 0.65rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s, opacity .15s;
+        }
+        .btn-primary {
+            background: #1877f2;
+            color: #fff;
+        }
+        .btn-primary:hover { background: #166fe5; }
+        .btn-primary:active { opacity: .9; }
+        .messages { margin-bottom: 1rem; }
+        .messages p {
+            padding: 0.6rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+        .messages .error   { background: #ffe6e6; color: #b00020; }
+        .messages .success { background: #e6ffe6; color: #1b7a1b; }
+        .messages .info    { background: #e6f0ff; color: #0044cc; }
+        .errorlist {
+            list-style: none;
+            margin-top: 0.3rem;
+            font-size: 0.8rem;
+            color: #b00020;
+        }
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.2rem;
+            font-size: 0.88rem;
+        }
+        .auth-footer a {
+            color: #1877f2;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .auth-footer a:hover { text-decoration: underline; }
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            border-bottom: 1px solid #e4e6eb;
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,.04);
+        }
+        .top-bar .brand { font-weight: 700; color: #1877f2; }
+        .top-bar a {
+            color: #1a1a2e;
+            text-decoration: none;
+            margin-left: 1rem;
+        }
+        .top-bar a:hover { color: #1877f2; }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    {% if user.is_authenticated %}
+    <nav class="top-bar">
+        <span class="brand">clinic_ai</span>
+        <div>
+            <span>{{ user.username }}</span>
+            <a href="{% url 'accounts:profile' %}">Profile</a>
+            <form action="{% url 'accounts:logout' %}" method="post" style="display:inline">
+                {% csrf_token %}
+                <button type="submit" style="background:none;border:none;color:#1a1a2e;cursor:pointer;font:inherit;text-decoration:none;margin-left:1rem;">Log out</button>
+            </form>
+        </div>
+    </nav>
+    {% endif %}
+
+    <div class="auth-card">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
