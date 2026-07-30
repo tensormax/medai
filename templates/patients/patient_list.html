@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Patients{% endblock %}
+{% block content %}
+
+<h1>My Patients</h1>
+
+{% if patients %}
+<ul style="list-style:none; margin-top:1rem;">
+    {% for patient in patients %}
+    <li style="padding:0.75rem 0; border-bottom:1px solid #e4e6eb; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <strong>{{ patient.full_name }}</strong><br>
+            <span style="font-size:0.85rem;color:#65676b;">{{ patient.mrn }} &middot; {{ patient.get_sex_display }}</span>
+        </div>
+        <div>
+            <a href="{% url 'patients:patient_detail' pk=patient.pk %}" style="margin-right:0.5rem;">View</a>
+            <a href="{% url 'patients:patient_update' pk=patient.pk %}">Edit</a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p style="text-align:center; margin:2rem 0; color:#65676b;">No patients yet.</p>
+{% endif %}
+
+<div class="auth-footer">
+    <a href="{% url 'patients:patient_create' %}">Add a new patient</a>
+</div>
+
+{% endblock %}

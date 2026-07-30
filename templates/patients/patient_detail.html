@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ patient.full_name }}{% endblock %}
+{% block content %}
+
+<h1>{{ patient.full_name }}</h1>
+<p class="subtitle">MRN: {{ patient.mrn }}</p>
+
+<table style="width:100%; border-collapse:collapse; margin:1rem 0;">
+    <tr><td style="padding:0.5rem 0; color:#65676b;">Date of Birth</td><td>{{ patient.date_of_birth }}</td></tr>
+    <tr><td style="padding:0.5rem 0; color:#65676b;">Sex</td><td>{{ patient.get_sex_display }}</td></tr>
+    <tr><td style="padding:0.5rem 0; color:#65676b;">Phone</td><td>{{ patient.phone_number|default:"—" }}</td></tr>
+    <tr><td style="padding:0.5rem 0; color:#65676b;">Address</td><td>{{ patient.address|default:"—"|linebreaksbr }}</td></tr>
+</table>
+
+<div class="auth-footer" style="display:flex; justify-content:space-between;">
+    <a href="{% url 'patients:patient_update' pk=patient.pk %}">Edit patient</a>
+    <a href="{% url 'patients:patient_list' %}">Back to list</a>
+</div>
+
+{% endblock %}
