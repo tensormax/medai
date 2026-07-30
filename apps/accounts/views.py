@@ -1,23 +1,37 @@
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView, LogoutView
-from django.views.generic.edit import CreateView
-from django.urls import reverse_lazy
+from django.shortcuts import redirect, render
+
+from .forms import DoctorProfileForm, DoctorRegistrationForm
 
 
-class SignUpView(CreateView):
-    """New-user registration using Django's built-in UserCreationForm."""
-    form_class = UserCreationForm
-    template_name = "accounts/signup.html"
-    success_url = reverse_lazy("accounts:account_login")
+def register(request):
+    if request.method == "POST":
+        form = DoctorRegistrationForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect("accounts:login")
+    else:
+        form = DoctorRegistrationForm()
+    return render(request, "accounts/register.html", {"form": form})
+
+
+@login_required
+def profile(request):
+    doctor = request.user.doctor_profile
+    if request.method == "POST":
+        form = DoctorProfileForm(request.POST, instance=doctor)
+        if form.is_valid():
+            form.save()
+            return redirect("accounts:profile")
+    else:
+        form = DoctorProfileForm(instance=doctor)
+    return render(request, "accounts/profile.html", {"form": form, "doctor": doctor})
 
 
 class CustomLoginView(LoginView):
-    """Login using Django's built-in AuthenticationForm."""
-    form_class = AuthenticationForm
     template_name = "accounts/login.html"
-    # On success, LOGIN_REDIRECT_URL from settings.py is used.
 
 
 class CustomLogoutView(LogoutView):
-    """Log out and redirect to the login page."""
-    next_page = reverse_lazy("accounts:account_login")
+    next_page = "accounts:login"
