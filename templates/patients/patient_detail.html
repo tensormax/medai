@@ -14,6 +14,7 @@
 
 <div class="auth-footer" style="display:flex; justify-content:space-between;">
     <a href="{% url 'patients:patient_update' pk=patient.pk %}">Edit patient</a>
+    <a href="{% url 'tasks:task_create' %}?patient={{ patient.pk }}">Add task</a>
     <a href="{% url 'patients:patient_list' %}">Back to list</a>
 </div>
 

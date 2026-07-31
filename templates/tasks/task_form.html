@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{% if editing %}Edit{% else %}New{% endif %} Task{% endblock %}
+{% block content %}
+
+<h1>{% if editing %}Edit{% else %}New{% endif %} Task</h1>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <ul class="errorlist">
+        {% for err in form.non_field_errors %}
+        <li>{{ err }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% for field in form %}
+    <div class="form-group">
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.errors %}
+        <ul class="errorlist">
+            {% for err in field.errors %}
+            <li>{{ err }}</li>
+            {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+    {% endfor %}
+
+    <button type="submit" class="btn btn-primary">
+        {% if editing %}Save Changes{% else %}Create Task{% endif %}
+    </button>
+</form>
+
+<div class="auth-footer">
+    <a href="{% url 'tasks:dashboard' %}">Cancel</a>
+</div>
+
+{% endblock %}

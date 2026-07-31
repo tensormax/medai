@@ -23,3 +23,10 @@ staticfiles/
 .vscode/
 .idea/
 .DS_Store
+
+#md files
+
+01_accounts.md
+02_patients.md
+03_tasks.md
+04_vists.md

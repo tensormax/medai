@@ -133,6 +133,7 @@
         <span class="brand">clinic_ai</span>
         <div>
             <span>{{ user.username }}</span>
+            <a href="{% url 'tasks:dashboard' %}">Dashboard</a>
             <a href="{% url 'accounts:profile' %}">Profile</a>
             <form action="{% url 'accounts:logout' %}" method="post" style="display:inline">
                 {% csrf_token %}

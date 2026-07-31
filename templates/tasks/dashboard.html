@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<h1>Dashboard</h1>
+<p class="subtitle">Your tasks</p>
+
+<div style="text-align:right; margin-bottom:1rem;">
+    <a href="{% url 'tasks:task_create' %}">New task</a>
+</div>
+
+<h2 style="font-size:1.1rem; margin:1.25rem 0 0.5rem;">Due Today</h2>
+{% if today_tasks %}
+<ul style="list-style:none;">
+    {% for task in today_tasks %}
+    <li style="padding:0.75rem 0; border-bottom:1px solid #e4e6eb; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <strong>{{ task.title }}</strong><br>
+            <span style="font-size:0.85rem; color:#65676b;">{{ task.patient.full_name }} &middot; due {{ task.due_at|date:"M j, Y g:i A" }}</span>
+        </div>
+        <div>
+            <form action="{% url 'tasks:task_complete' pk=task.pk %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" style="background:none;border:none;color:#1877f2;cursor:pointer;font:inherit;">Mark completed</button>
+            </form>
+            <a href="{% url 'tasks:task_update' pk=task.pk %}" style="margin-left:0.75rem;">Edit</a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p style="color:#65676b;">No tasks due today.</p>
+{% endif %}
+
+<h2 style="font-size:1.1rem; margin:1.25rem 0 0.5rem;">Upcoming</h2>
+{% if upcoming_tasks %}
+<ul style="list-style:none;">
+    {% for task in upcoming_tasks %}
+    <li style="padding:0.75rem 0; border-bottom:1px solid #e4e6eb; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <strong>{{ task.title }}</strong><br>
+            <span style="font-size:0.85rem; color:#65676b;">{{ task.patient.full_name }} &middot; due {{ task.due_at|date:"M j, Y g:i A" }}</span>
+        </div>
+        <div>
+            <form action="{% url 'tasks:task_complete' pk=task.pk %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button type="submit" style="background:none;border:none;color:#1877f2;cursor:pointer;font:inherit;">Mark completed</button>
+            </form>
+            <a href="{% url 'tasks:task_update' pk=task.pk %}" style="margin-left:0.75rem;">Edit</a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p style="color:#65676b;">No upcoming tasks.</p>
+{% endif %}
+
+<h2 style="font-size:1.1rem; margin:1.25rem 0 0.5rem;">Completed</h2>
+{% if completed_tasks %}
+<ul style="list-style:none;">
+    {% for task in completed_tasks %}
+    <li style="padding:0.75rem 0; border-bottom:1px solid #e4e6eb; display:flex; justify-content:space-between; align-items:center;">
+        <div>
+            <strong>{{ task.title }}</strong><br>
+            <span style="font-size:0.85rem; color:#65676b;">{{ task.patient.full_name }} &middot; due {{ task.due_at|date:"M j, Y g:i A" }}</span>
+        </div>
+        <div>
+            <a href="{% url 'tasks:task_update' pk=task.pk %}">Edit</a>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+{% else %}
+<p style="color:#65676b;">No completed tasks.</p>
+{% endif %}
+
+{% endblock %}
