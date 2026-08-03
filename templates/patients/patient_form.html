@@ -2,45 +2,43 @@
 {% block title %}{% if editing %}Edit{% else %}Add{% endif %} Patient{% endblock %}
 {% block content %}
 
-<h1>{% if editing %}Edit{% else %}New{% endif %} Patient</h1>
+<div class="mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900">{% if editing %}Edit{% else %}New{% endif %} Patient</h1>
+</div>
 
-<form method="post" novalidate>
-    {% csrf_token %}
-
-    {% if form.non_field_errors %}
-    <ul class="errorlist">
-        {% for err in form.non_field_errors %}
-        <li>{{ err }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-
-    {% for field in form %}
-    <div class="form-group">
-        {{ field.label_tag }}
-        {{ field }}
-        {% if field.help_text %}
-        <small style="color:#65676b; font-size:0.75rem; display:block; margin-top:2px;">
-            {{ field.help_text }}
-        </small>
-        {% endif %}
-        {% if field.errors %}
+<div class="card max-w-xl">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
         <ul class="errorlist">
-            {% for err in field.errors %}
+            {% for err in form.non_field_errors %}
             <li>{{ err }}</li>
             {% endfor %}
         </ul>
         {% endif %}
-    </div>
-    {% endfor %}
-
-    <button type="submit" class="btn btn-primary">
-        {% if editing %}Save Changes{% else %}Create Patient{% endif %}
-    </button>
-</form>
-
-<div class="auth-footer">
-    <a href="{% url 'patients:patient_list' %}">Cancel</a>
+        {% for field in form %}
+        <div class="mb-4">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+            <p class="mt-1 text-xs text-gray-500">{{ field.help_text|safe }}</p>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">
+                {% for err in field.errors %}
+                <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="flex items-center gap-3">
+            <button type="submit" class="btn btn-primary">
+                {% if editing %}Save Changes{% else %}Create Patient{% endif %}
+            </button>
+            <a href="{% url 'patients:patient_list' %}" class="text-sm font-medium text-gray-500 hover:text-gray-700">Cancel</a>
+        </div>
+    </form>
 </div>
 
 {% endblock %}
