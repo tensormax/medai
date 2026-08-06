@@ -2,76 +2,128 @@
 {% block title %}Dashboard{% endblock %}
 {% block content %}
 
-<h1>Dashboard</h1>
-<p class="subtitle">Your tasks</p>
-
-<div style="text-align:right; margin-bottom:1rem;">
-    <a href="{% url 'tasks:task_create' %}">New task</a>
+<div class="mb-8">
+    <h1 class="text-2xl font-semibold text-gray-900">{{ greeting }}, Dr. {{ request.user.doctor_profile.full_name }}</h1>
+    <p class="mt-1 text-sm text-gray-600">{% now "l, F j" %}</p>
 </div>
 
-<h2 style="font-size:1.1rem; margin:1.25rem 0 0.5rem;">Due Today</h2>
-{% if today_tasks %}
-<ul style="list-style:none;">
-    {% for task in today_tasks %}
-    <li style="padding:0.75rem 0; border-bottom:1px solid #e4e6eb; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <strong>{{ task.title }}</strong><br>
-            <span style="font-size:0.85rem; color:#65676b;">{{ task.patient.full_name }} &middot; due {{ task.due_at|date:"M j, Y g:i A" }}</span>
+<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+    <div class="card flex items-center gap-4">
+        <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            {% include "partials/icon.html" with name="calendar" class="h-5 w-5" %}
         </div>
         <div>
-            <form action="{% url 'tasks:task_complete' pk=task.pk %}" method="post" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" style="background:none;border:none;color:#1877f2;cursor:pointer;font:inherit;">Mark completed</button>
-            </form>
-            <a href="{% url 'tasks:task_update' pk=task.pk %}" style="margin-left:0.75rem;">Edit</a>
+            <p class="text-2xl font-semibold text-gray-900">{{ today_tasks|length }}</p>
+            <p class="text-sm text-gray-600">Appointments today</p>
         </div>
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p style="color:#65676b;">No tasks due today.</p>
-{% endif %}
+    </div>
+    <div class="card flex items-center gap-4">
+        <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            {% include "partials/icon.html" with name="clipboard" class="h-5 w-5" %}
+        </div>
+        <div>
+            <p class="text-2xl font-semibold text-gray-900">{{ upcoming_tasks|length }}</p>
+            <p class="text-sm text-gray-600">Follow-ups</p>
+        </div>
+    </div>
+    <div class="card flex items-center gap-4">
+        <div class="flex h-11 w-11 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+            {% include "partials/icon.html" with name="flask" class="h-5 w-5" %}
+        </div>
+        <div>
+            <p class="text-2xl font-semibold text-gray-900">{{ new_lab_count }}</p>
+            <p class="text-sm text-gray-600">New lab reports</p>
+        </div>
+    </div>
+</div>
 
-<h2 style="font-size:1.1rem; margin:1.25rem 0 0.5rem;">Upcoming</h2>
-{% if upcoming_tasks %}
-<ul style="list-style:none;">
-    {% for task in upcoming_tasks %}
-    <li style="padding:0.75rem 0; border-bottom:1px solid #e4e6eb; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <strong>{{ task.title }}</strong><br>
-            <span style="font-size:0.85rem; color:#65676b;">{{ task.patient.full_name }} &middot; due {{ task.due_at|date:"M j, Y g:i A" }}</span>
-        </div>
-        <div>
-            <form action="{% url 'tasks:task_complete' pk=task.pk %}" method="post" style="display:inline;">
-                {% csrf_token %}
-                <button type="submit" style="background:none;border:none;color:#1877f2;cursor:pointer;font:inherit;">Mark completed</button>
-            </form>
-            <a href="{% url 'tasks:task_update' pk=task.pk %}" style="margin-left:0.75rem;">Edit</a>
-        </div>
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p style="color:#65676b;">No upcoming tasks.</p>
-{% endif %}
+<div class="card mt-6">
+    <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">What would you like to review today?</h2>
+    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <a href="{% url 'patients:patient_list' %}" class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600">
+            Review a patient
+            {% include "partials/icon.html" with name="chevron-right" class="h-4 w-4" %}
+        </a>
+        <a href="{% url 'patients:patient_list' %}" class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600">
+            Check lab reports
+            {% include "partials/icon.html" with name="chevron-right" class="h-4 w-4" %}
+        </a>
+        <a href="{% url 'patients:patient_list' %}" class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600">
+            Start a visit
+            {% include "partials/icon.html" with name="chevron-right" class="h-4 w-4" %}
+        </a>
+    </div>
+</div>
 
-<h2 style="font-size:1.1rem; margin:1.25rem 0 0.5rem;">Completed</h2>
-{% if completed_tasks %}
-<ul style="list-style:none;">
-    {% for task in completed_tasks %}
-    <li style="padding:0.75rem 0; border-bottom:1px solid #e4e6eb; display:flex; justify-content:space-between; align-items:center;">
-        <div>
-            <strong>{{ task.title }}</strong><br>
-            <span style="font-size:0.85rem; color:#65676b;">{{ task.patient.full_name }} &middot; due {{ task.due_at|date:"M j, Y g:i A" }}</span>
+<div class="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+    <div class="card">
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="section-title">Due Today</h2>
+            <a href="{% url 'tasks:task_create' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">New task</a>
         </div>
-        <div>
-            <a href="{% url 'tasks:task_update' pk=task.pk %}">Edit</a>
+        {% if today_tasks %}
+        <ul class="divide-y divide-gray-100">
+            {% for task in today_tasks %}
+            <li class="flex items-center justify-between py-3">
+                <div>
+                    <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
+                    <p class="text-xs text-gray-500">{{ task.patient.full_name }} &middot; {{ task.due_at|date:"g:i A" }}</p>
+                </div>
+                <form action="{% url 'tasks:task_complete' pk=task.pk %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="text-xs font-medium text-blue-600 hover:text-blue-700">Mark completed</button>
+                </form>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-500">Nothing due today.</p>
+        {% endif %}
+    </div>
+
+    <div class="card">
+        <div class="mb-4 flex items-center justify-between">
+            <h2 class="section-title">Upcoming</h2>
+            <a href="{% url 'tasks:task_create' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">New task</a>
         </div>
-    </li>
-    {% endfor %}
-</ul>
-{% else %}
-<p style="color:#65676b;">No completed tasks.</p>
-{% endif %}
+        {% if upcoming_tasks %}
+        <ul class="divide-y divide-gray-100">
+            {% for task in upcoming_tasks %}
+            <li class="flex items-center justify-between py-3">
+                <div>
+                    <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
+                    <p class="text-xs text-gray-500">{{ task.patient.full_name }} &middot; {{ task.due_at|date:"M j, g:i A" }}</p>
+                </div>
+                <a href="{% url 'tasks:task_update' pk=task.pk %}" class="text-xs font-medium text-gray-500 hover:text-gray-700">Edit</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-sm text-gray-500">Nothing upcoming.</p>
+        {% endif %}
+    </div>
+</div>
+
+<div class="card mt-6">
+    <div class="mb-4 flex items-center justify-between">
+        <h2 class="section-title">Completed</h2>
+        <a href="{% url 'tasks:task_create' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">New task</a>
+    </div>
+    {% if completed_tasks %}
+    <ul class="divide-y divide-gray-100">
+        {% for task in completed_tasks %}
+        <li class="flex items-center justify-between py-3">
+            <div>
+                <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
+                <p class="text-xs text-gray-500">{{ task.patient.full_name }}</p>
+            </div>
+            <a href="{% url 'tasks:task_update' pk=task.pk %}" class="text-xs font-medium text-gray-500 hover:text-gray-700">Edit</a>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-sm text-gray-500">Nothing completed yet.</p>
+    {% endif %}
+</div>
 
 {% endblock %}
