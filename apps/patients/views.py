@@ -16,7 +16,33 @@ def patient_list(request):
 def patient_detail(request, pk):
     doctor = request.user.doctor_profile
     patient = get_patient_or_404_for(doctor, pk)
-    return render(request, "patients/patient_detail.html", {"patient": patient})
+    visits = patient.visits.all()
+    latest_visit = visits.first()
+    latest_open_visit = visits.filter(status="open").first()
+    ai_insight = None
+    if latest_visit is not None:
+        from apps.visits.models import VisitMessage
+
+        ai_insight = (
+            VisitMessage.objects.filter(visit__patient=patient, role="ai")
+            .select_related("visit")
+            .order_by("-created_at")
+            .first()
+        )
+    next_task = patient.tasks.filter(status="pending").order_by("due_at").first()
+    latest_lab = patient.documents.filter(doc_type="lab").first()
+    return render(
+        request,
+        "patients/patient_detail.html",
+        {
+            "patient": patient,
+            "latest_visit": latest_visit,
+            "latest_open_visit": latest_open_visit,
+            "ai_insight": ai_insight,
+            "next_task": next_task,
+            "latest_lab": latest_lab,
+        },
+    )
 
 
 @login_required

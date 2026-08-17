@@ -1,0 +1,15 @@
+<div style="border:1px solid #e4e6eb;border-radius:8px;padding:.6rem .75rem;margin-bottom:.6rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:.5rem;">
+        <a href="{% url 'visits:visit_detail' pk=visit.pk %}"
+           style="font-weight:600;font-size:.88rem;color:#1a1a2e;text-decoration:none;">
+            Visit — {{ visit.started_at|date:"j M Y" }}
+        </a>
+        <span style="font-size:.72rem;font-weight:600;padding:.1rem .5rem;border-radius:999px;
+                     {% if visit.status == 'open' %}background:#e6ffe6;color:#1b7a1b;{% else %}background:#f0f2f5;color:#65676b;{% endif %}">
+            {{ visit.get_status_display }}
+        </span>
+    </div>
+    {% if visit.summary %}
+    <p style="margin-top:.3rem;font-size:.8rem;color:#65676b;">{{ visit.summary }}</p>
+    {% endif %}
+</div>

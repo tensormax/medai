@@ -1,32 +1,14 @@
-# Environment variables
-.env
-
-# Python / Bytecode
+# Python
 __pycache__/
-*.py[cod]
-*$py.class
-*.so
-
-# Virtual Environment
+*.pyc
 .venv/
-venv/
-env/
-ENV/
 
-# Django / Database
-*.sqlite3
-*.log
+# Django
+db.sqlite3
 media/
-staticfiles/
 
-# IDE / OS specific
-.vscode/
-.idea/
+# RAG artifacts
+vector_store/
+
+# Misc
 .DS_Store
-
-#md files
-
-01_accounts.md
-02_patients.md
-03_tasks.md
-04_vists.md

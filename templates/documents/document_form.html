@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Upload document — {{ patient.full_name }}{% endblock %}
+{% block content %}
+<h1>Upload document</h1>
+<p class="subtitle">{{ patient.full_name }} &middot; MRN {{ patient.mrn }}</p>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+    <div class="messages"><p class="error">{{ form.non_field_errors|first }}</p></div>
+    {% endif %}
+    {% for field in form %}
+    <div class="form-group">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.help_text %}<small style="color:#65676b;">{{ field.help_text }}</small>{% endif %}
+        {{ field.errors }}
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-primary">Upload &amp; ingest</button>
+</form>
+
+<p class="auth-footer">
+    <a href="{% url 'documents:document_list' patient_pk=patient.pk %}">&larr; Back to documents</a>
+</p>
+{% endblock %}

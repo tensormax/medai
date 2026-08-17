@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}{{ document.title|default:"Document" }}{% endblock %}
+{% block content %}
+<style>
+    .auth-card { max-width: 720px; }
+    .chunk { border:1px solid #e4e6eb; border-radius:8px; padding:.6rem .75rem; margin-bottom:.6rem; }
+    .chunk-head { font-size:.72rem; color:#65676b; margin-bottom:.3rem; font-weight:600; }
+    .chunk-body { font-size:.85rem; color:#333; white-space:pre-wrap; }
+    dl.meta { font-size:.88rem; }
+    dl.meta div { display:flex; justify-content:space-between; padding:.3rem 0; border-bottom:1px solid #f0f2f5; }
+    dl.meta dt { color:#65676b; }
+</style>
+
+<h1>{{ document.title|default:"Untitled document" }}</h1>
+<p class="subtitle">{{ document.patient.full_name }} &middot; MRN {{ document.patient.mrn }}</p>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}
+</div>
+{% endif %}
+
+<dl class="meta">
+    <div><dt>Kind</dt><dd>{{ document.get_kind_display }}</dd></div>
+    <div><dt>Type</dt><dd>{{ document.get_doc_type_display }}</dd></div>
+    <div><dt>Uploaded</dt><dd>{{ document.uploaded_at|date:"j M Y, H:i" }}</dd></div>
+    <div><dt>Visit</dt><dd>{{ document.visit|default:"—" }}</dd></div>
+    <div><dt>Chunks indexed</dt><dd>{{ chunks|length }}</dd></div>
+    {% if document.file %}
+    <div><dt>File</dt><dd><a href="{{ document.file.url }}" target="_blank">download</a></dd></div>
+    {% endif %}
+</dl>
+
+<h2 style="font-size:1.05rem;margin:1.2rem 0 .6rem;">Embedded chunks</h2>
+{% for chunk in chunks %}
+<div class="chunk">
+    <div class="chunk-head">Chunk {{ chunk.chunk_index }} &middot; {{ chunk.embedding_id }}</div>
+    <div class="chunk-body">{{ chunk.chunk_text|truncatechars:400 }}</div>
+</div>
+{% empty %}
+<p style="color:#65676b;font-size:.9rem;">No chunks — this document has no extractable text.</p>
+{% endfor %}
+
+<form method="post" action="{% url 'documents:document_delete' pk=document.pk %}"
+      onsubmit="return confirm('Delete this document and its embeddings?');" style="margin-top:1rem;">
+    {% csrf_token %}
+    <button type="submit" class="btn" style="background:#ffe6e6;color:#b00020;">Delete document</button>
+</form>
+
+<p class="auth-footer">
+    <a href="{% url 'documents:document_list' patient_pk=document.patient.pk %}">&larr; Back to documents</a>
+</p>
+{% endblock %}

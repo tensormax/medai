@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Documents — {{ patient.full_name }}{% endblock %}
+{% block content %}
+<style>
+    .auth-card { max-width: 720px; }
+    .doc-row { display:flex; justify-content:space-between; align-items:center; gap:.75rem;
+               padding:.7rem .25rem; border-bottom:1px solid #eef0f3; }
+    .doc-row:last-child { border-bottom:none; }
+    .doc-meta { font-size:.8rem; color:#65676b; }
+    .badge { display:inline-block; padding:.1rem .5rem; border-radius:999px;
+             font-size:.72rem; font-weight:600; background:#e6f0ff; color:#0044cc; }
+    .search-result { border:1px solid #e4e6eb; border-radius:8px; padding:.6rem .75rem;
+                     margin-top:.6rem; font-size:.85rem; }
+    .search-result .score { color:#1877f2; font-weight:600; font-size:.75rem; }
+</style>
+
+<h1>Documents</h1>
+<p class="subtitle">{{ patient.full_name }} &middot; MRN {{ patient.mrn }}</p>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}<p class="{{ message.tags }}">{{ message }}</p>{% endfor %}
+</div>
+{% endif %}
+
+<p style="margin-bottom:1rem;">
+    <a class="btn btn-primary" style="width:auto;padding:.5rem 1rem;text-decoration:none;color:#fff;"
+       href="{% url 'documents:document_upload' patient_pk=patient.pk %}">+ Upload document</a>
+</p>
+
+{% for document in documents %}
+<div class="doc-row">
+    <div>
+        <a href="{% url 'documents:document_detail' pk=document.pk %}"
+           style="font-weight:600;color:#1a1a2e;text-decoration:none;">
+            {{ document.title|default:"Untitled document" }}
+        </a>
+        <div class="doc-meta">
+            {{ document.get_doc_type_display }} &middot; {{ document.get_kind_display }}
+            &middot; {{ document.uploaded_at|date:"j M Y, H:i" }}
+            &middot; {{ document.chunks.count }} chunk{{ document.chunks.count|pluralize }}
+        </div>
+    </div>
+    <span class="badge">{% if document.chunks.count %}RAG-ready{% else %}no text{% endif %}</span>
+</div>
+{% empty %}
+<p style="color:#65676b;font-size:.9rem;">No documents yet. Upload an MRI, CT or lab report to make it searchable.</p>
+{% endfor %}
+
+<hr style="margin:1.5rem 0;border:none;border-top:1px solid #e4e6eb;">
+
+<h2 style="font-size:1.05rem;margin-bottom:.5rem;">Semantic search (retrieval preview)</h2>
+<p class="doc-meta" style="margin-bottom:.6rem;">Queries the FAISS index built from this patient's documents (all-MiniLM-L6-v2 embeddings).</p>
+<div class="form-group" style="display:flex;gap:.5rem;">
+    <input type="text" id="rag-query" placeholder="e.g. blood glucose trend" style="flex:1;">
+    <button type="button" class="btn btn-primary" style="width:auto;padding:.5rem 1rem;" onclick="ragSearch()">Search</button>
+</div>
+<div id="rag-results"></div>
+
+<p class="auth-footer"><a href="{% url 'patients:patient_detail' pk=patient.pk %}">&larr; Back to patient</a></p>
+
+<script>
+async function ragSearch() {
+    const q = document.getElementById('rag-query').value.trim();
+    const box = document.getElementById('rag-results');
+    if (!q) { box.innerHTML = '<p class="doc-meta">Type a query first.</p>'; return; }
+    box.innerHTML = '<p class="doc-meta">Searching…</p>';
+    try {
+        const resp = await fetch("{% url 'documents:document_search' patient_pk=patient.pk %}?q=" + encodeURIComponent(q));
+        const data = await resp.json();
+        if (!data.results || !data.results.length) {
+            box.innerHTML = '<p class="doc-meta">No matching chunks found.</p>';
+            return;
+        }
+        box.innerHTML = data.results.map(r =>
+            `<div class="search-result">
+                <div><span class="score">score ${r.score}</span>
+                     &nbsp;·&nbsp; ${r.document_title} (chunk ${r.chunk_index})</div>
+                <div style="margin-top:.3rem;color:#333;">${r.text}</div>
+             </div>`).join('');
+    } catch (e) {
+        box.innerHTML = '<p class="doc-meta">Search failed: ' + e + '</p>';
+    }
+}
+document.getElementById('rag-query').addEventListener('keydown', e => { if (e.key === 'Enter') ragSearch(); });
+</script>
+{% endblock %}

@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
@@ -120,6 +121,30 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+# ── Uploaded files (patient documents, generated reports) ─────────────
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+# ── RAG / document ingestion ──────────────────────────────────────────
+# Sentence-transformer used to embed document chunks (and, later, queries).
+# Prefers a local copy (offline-friendly); falls back to downloading from
+# the Hugging Face hub on first use.
+_LOCAL_EMBEDDING_MODEL = Path.home() / '.cache' / 'medai' / 'all-MiniLM-L6-v2'
+EMBEDDING_MODEL_NAME = (
+    str(_LOCAL_EMBEDDING_MODEL)
+    if _LOCAL_EMBEDDING_MODEL.exists()
+    else 'sentence-transformers/all-MiniLM-L6-v2'
+)
+EMBEDDING_DIM = 384  # output dimension of all-MiniLM-L6-v2
+
+# Where the FAISS index lives on disk (external vector store; the DB only
+# keeps embedding_id pointers on DocumentChunk).
+VECTOR_STORE_DIR = BASE_DIR / 'vector_store'
+
+# Upload constraints for document ingestion.
+DOCUMENT_ALLOWED_EXTENSIONS = ['.pdf', '.txt', '.md']
+DOCUMENT_MAX_UPLOAD_SIZE = 10 * 1024 * 1024  # 10 MB
 
 # ── Authentication ────────────────────────────────────
 LOGIN_URL = '/accounts/login/'

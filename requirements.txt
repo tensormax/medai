@@ -1,0 +1,5 @@
+Django>=5.0
+sentence-transformers>=3.0
+pypdf>=4.0
+faiss-cpu>=1.8
+numpy
