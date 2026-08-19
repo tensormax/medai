@@ -251,3 +251,4 @@ After any CSS changes:
 ```bash
 npx tailwindcss -i static/src/input.css -o static/css/tailwind.css --minify
 ```
+https://drive.google.com/drive/folders/1IL0Uuaq04ozy1WQlC04T9gHjn8tg0ery?usp=sharing
