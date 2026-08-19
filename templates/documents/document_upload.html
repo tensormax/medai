@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Upload document{% endblock %}
+{% block content %}
+
+<div class="mb-6">
+    <a href="{% url 'documents:document_list' patient_pk=patient.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">← Back to documents</a>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900">Upload document</h1>
+    <p class="mt-1 text-sm text-gray-600">for {{ patient.full_name }}</p>
+</div>
+
+<div class="card max-w-xl">
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-4">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}<p class="mt-1 text-xs text-gray-500">{{ field.help_text }}</p>{% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">
+                {% for err in field.errors %}
+                <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary">Upload &amp; analyze</button>
+    </form>
+</div>
+
+{% endblock %}

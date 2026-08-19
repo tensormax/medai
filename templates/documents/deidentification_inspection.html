@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}De-identification Inspection — {{ document.title }}{% endblock %}
+{% block content %}
+
+<div class="mb-6">
+    <a href="{% url 'documents:chunk_inspection' pk=document.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">&larr; Back to chunks</a>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900">De-identification Inspection</h1>
+    <p class="mt-1 text-sm text-gray-600">
+        {{ document.title }} &middot; {{ document.get_doc_type_display }}
+        &middot; PHI entities detected: {{ phi_count }}
+    </p>
+</div>
+
+{% if phi_entities %}
+<div class="card mb-6">
+    <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-gray-500">Detected PHI Entities</h2>
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-xs">
+            <thead>
+                <tr class="border-b border-gray-200 text-left text-gray-500">
+                    <th class="pb-2 pr-4">Entity Type</th>
+                    <th class="pb-2 pr-4">Text</th>
+                    <th class="pb-2 pr-4">Position</th>
+                    <th class="pb-2">Score</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100">
+                {% for entity in phi_entities %}
+                <tr>
+                    <td class="py-1.5 pr-4 font-medium text-red-700">{{ entity.entity_type }}</td>
+                    <td class="py-1.5 pr-4 text-gray-900">{{ entity.text }}</td>
+                    <td class="py-1.5 pr-4 text-gray-500">{{ entity.start }}-{{ entity.end }}</td>
+                    <td class="py-1.5 text-gray-500">{{ entity.score|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+
+<div class="grid gap-6 lg:grid-cols-2">
+    <div class="card">
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-red-500">Original Text</h2>
+        <pre class="max-h-96 overflow-auto whitespace-pre-wrap rounded-md bg-red-50 p-4 text-xs text-gray-800">{{ original_text }}</pre>
+    </div>
+    <div class="card">
+        <h2 class="mb-3 text-sm font-semibold uppercase tracking-wide text-green-600">De-identified Text (Chunks)</h2>
+        <pre class="max-h-96 overflow-auto whitespace-pre-wrap rounded-md bg-green-50 p-4 text-xs text-gray-800">{{ deidentified_text }}</pre>
+    </div>
+</div>
+
+{% endblock %}

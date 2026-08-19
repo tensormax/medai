@@ -1,0 +1,6 @@
+<h2 style="font-size:1.15rem; margin-bottom:0.5rem;">{{ report.title }}</h2>
+<p class="summary" style="font-style:italic; color:#333; margin-bottom:1rem;">{{ report.summary }}</p>
+{% for section in report.sections %}
+<h3 style="font-size:1.05rem; margin:1rem 0 0.35rem;">{{ section.heading }}</h3>
+<p style="line-height:1.5;">{{ section.content }}</p>
+{% endfor %}

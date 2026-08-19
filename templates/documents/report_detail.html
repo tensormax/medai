@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}{{ analysis.document.title }}{% endblock %}
+{% block content %}
+
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+        <a href="{% url 'documents:document_index' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">&larr; Reports</a>
+        <h1 class="mt-1 text-xl font-semibold text-gray-900">{{ analysis.document.title }}</h1>
+        <p class="text-xs text-gray-500">
+            Generated report &middot; {{ analysis.created_at|date:"d/m/Y g:i A" }}
+            &middot; <a href="{% url 'patients:patient_detail' pk=analysis.document.patient.pk %}" class="font-medium text-blue-600 hover:text-blue-700">{{ analysis.document.patient.full_name }}</a>
+        </p>
+    </div>
+    <div class="flex items-center gap-2">
+        {% if analysis.pdf_file %}
+        <a href="{% url 'documents:report_raw' pk=analysis.pk %}" target="_blank"
+           class="btn btn-primary inline-flex items-center gap-1.5">
+            {% include "partials/icon.html" with name="eye" class="h-4 w-4" %}
+            View PDF
+        </a>
+        <a href="{% url 'documents:report_download' pk=analysis.pk %}"
+           class="btn btn-primary inline-flex items-center gap-1.5">
+            {% include "partials/icon.html" with name="download" class="h-4 w-4" %}
+            Download PDF
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+{% if analysis.pdf_file %}
+<div class="rounded-2xl border border-gray-200 bg-white overflow-hidden" style="height: calc(100vh - 200px);">
+    <embed src="{% url 'documents:report_raw' pk=analysis.pk %}"
+           type="application/pdf"
+           class="h-full w-full"
+           title="{{ analysis.document.title }}">
+</div>
+{% else %}
+<div class="card">
+    {% include "documents/pdf/_report_content.html" with report=analysis.llm_response_json %}
+</div>
+<p class="mt-4 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-700">
+    No PDF is available for this report (PDF rendering is unavailable in this environment).
+</p>
+{% endif %}
+
+{% endblock %}

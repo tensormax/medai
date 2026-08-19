@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report.title }}</title>
+    <style>
+        @page { size: A4; margin: 2cm; }
+        body { font-family: "DejaVu Sans", Arial, sans-serif; font-size: 11pt; color: #222; line-height: 1.5; }
+        h1 { font-size: 16pt; border-bottom: 2px solid #333; padding-bottom: 4pt; }
+        h2 { font-size: 13pt; margin-top: 14pt; }
+        h3 { font-size: 12pt; margin-top: 12pt; }
+        .meta { font-size: 9pt; color: #555; margin-top: 4pt; }
+        .summary { font-style: italic; margin-top: 10pt; }
+        p { margin: 0.4rem 0; }
+    </style>
+</head>
+<body>
+    <h1>{{ report.title }}</h1>
+    <p class="meta">
+        Patient: {{ patient.full_name }} &middot; MRN: {{ patient.mrn }}
+        &middot; Generated: {% now "d/m/Y H:i" %}
+    </p>
+    {% include "documents/pdf/_report_content.html" %}
+</body>
+</html>

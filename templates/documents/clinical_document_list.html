@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Clinical Documents — {{ patient.full_name }}{% endblock %}
+{% block content %}
+
+<div class="mb-6">
+    <a href="{% url 'patients:patient_detail' pk=patient.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">&larr; {{ patient.full_name }}</a>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900">Clinical Documents</h1>
+    <p class="mt-1 text-sm text-gray-600">Generated documents for {{ patient.full_name }}.</p>
+</div>
+
+<div class="card">
+    {% if documents %}
+    <div class="divide-y divide-gray-100">
+        {% for doc in documents %}
+        <div class="flex items-center justify-between py-4 {% if not forloop.first %}border-t border-gray-100{% endif %}">
+            <div>
+                <p class="text-sm font-medium text-gray-900">{{ doc.title }}</p>
+                <p class="text-xs text-gray-500">{{ doc.get_document_type_display }} &middot; {{ doc.created_at|date:"d/m/Y g:i A" }}</p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                <a href="{% url 'documents:clinical_document_view' pk=doc.pk %}"
+                   class="btn btn-primary text-xs px-3 py-1.5 inline-flex items-center gap-1">
+                    {% include "partials/icon.html" with name="eye" class="h-3.5 w-3.5" %}
+                    View
+                </a>
+                <a href="{% url 'documents:clinical_document_download' pk=doc.pk %}"
+                   class="btn btn-primary text-xs px-3 py-1.5 inline-flex items-center gap-1">
+                    {% include "partials/icon.html" with name="download" class="h-3.5 w-3.5" %}
+                    Download
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="py-8 text-center text-sm text-gray-500">No documents generated yet.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

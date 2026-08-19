@@ -32,7 +32,7 @@ class Visit(models.Model):
         ordering = ["-started_at"]
 
     def __str__(self):
-        return f"Visit for {self.patient.full_name} on {self.started_at:%Y-%m-%d}"
+        return f"Visit for {self.patient.full_name} on {self.started_at:%d/%m/%Y}"
 
 
 class VisitMessage(models.Model):

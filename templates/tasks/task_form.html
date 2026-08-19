@@ -2,40 +2,77 @@
 {% block title %}{% if editing %}Edit{% else %}New{% endif %} Task{% endblock %}
 {% block content %}
 
-<h1>{% if editing %}Edit{% else %}New{% endif %} Task</h1>
+<div class="mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900">{% if editing %}Edit{% else %}New{% endif %} Task</h1>
+</div>
 
-<form method="post" novalidate>
-    {% csrf_token %}
-
-    {% if form.non_field_errors %}
-    <ul class="errorlist">
-        {% for err in form.non_field_errors %}
-        <li>{{ err }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-
-    {% for field in form %}
-    <div class="form-group">
-        {{ field.label_tag }}
-        {{ field }}
-        {% if field.errors %}
+<div class="card max-w-xl">
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {% if form.non_field_errors %}
         <ul class="errorlist">
-            {% for err in field.errors %}
+            {% for err in form.non_field_errors %}
             <li>{{ err }}</li>
             {% endfor %}
         </ul>
         {% endif %}
-    </div>
-    {% endfor %}
-
-    <button type="submit" class="btn btn-primary">
-        {% if editing %}Save Changes{% else %}Create Task{% endif %}
-    </button>
-</form>
-
-<div class="auth-footer">
-    <a href="{% url 'tasks:dashboard' %}">Cancel</a>
+        {% for field in form %}
+        <div class="mb-4">
+            {{ field.label_tag }}
+            {% if field.name == "linked_visit" %}
+            <select name="linked_visit" id="id_linked_visit" class="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-blue-500 focus:ring-1 focus:ring-blue-500">
+                <option value="">— None —</option>
+            </select>
+            {% elif field.name == "patient" %}
+            {{ field }}
+            {% else %}
+            {{ field }}
+            {% endif %}
+            {% if field.help_text %}
+            <p class="mt-1 text-xs text-gray-500">{{ field.help_text|safe }}</p>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">
+                {% for err in field.errors %}
+                <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <div class="flex items-center gap-3">
+            <button type="submit" class="btn btn-primary">
+                {% if editing %}Save Changes{% else %}Create Task{% endif %}
+            </button>
+            <a href="{% url 'tasks:dashboard' %}" class="text-sm font-medium text-gray-500 hover:text-gray-700">Cancel</a>
+        </div>
+    </form>
 </div>
+
+<script>
+(function() {
+    const visits = {{ visits_json|safe }};
+    const patientSelect = document.getElementById('id_patient');
+    const visitSelect = document.getElementById('id_linked_visit');
+    const currentVisit = '{{ form.instance.linked_visit_id|default:"" }}';
+
+    function populateVisits(patientId) {
+        visitSelect.innerHTML = '<option value="">— None —</option>';
+        if (!patientId) return;
+        visits.filter(v => String(v.patient_id) === String(patientId)).forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.id;
+            opt.textContent = v.label;
+            if (String(v.id) === String(currentVisit)) opt.selected = true;
+            visitSelect.appendChild(opt);
+        });
+    }
+
+    populateVisits(patientSelect.value);
+    patientSelect.addEventListener('change', function() {
+        populateVisits(this.value);
+    });
+})();
+</script>
 
 {% endblock %}

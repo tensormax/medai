@@ -65,7 +65,7 @@ class LoginViewTests(TestCase):
             reverse("accounts:login"),
             {"username": "dr_smith", "password": "correct-password"},
         )
-        self.assertRedirects(response, "/accounts/profile/")
+        self.assertRedirects(response, reverse("tasks:dashboard"))
 
     def test_login_with_incorrect_credentials(self):
         response = self.client.post(

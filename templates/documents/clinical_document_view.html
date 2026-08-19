@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}{{ doc.title }} — Clinical AI{% endblock %}
+{% block content %}
+
+<div class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+        <a href="{% url 'documents:clinical_document_list' patient_pk=doc.patient.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">&larr; Documents</a>
+        <h1 class="mt-1 text-xl font-semibold text-gray-900">{{ doc.title }}</h1>
+        <p class="text-xs text-gray-500">{{ doc.get_document_type_display }} &middot; {{ doc.created_at|date:"d/m/Y g:i A" }}</p>
+    </div>
+    <div class="flex items-center gap-2">
+        <a href="{% url 'documents:clinical_document_download' pk=doc.pk %}"
+           class="btn btn-primary inline-flex items-center gap-1.5">
+            {% include "partials/icon.html" with name="download" class="h-4 w-4" %}
+            Download PDF
+        </a>
+    </div>
+</div>
+
+<div class="rounded-2xl border border-gray-200 bg-white overflow-hidden" style="height: calc(100vh - 200px);">
+    <embed src="{% url 'documents:clinical_document_raw' pk=doc.pk %}"
+           type="application/pdf"
+           class="h-full w-full"
+           title="{{ doc.title }}">
+</div>
+
+{% endblock %}

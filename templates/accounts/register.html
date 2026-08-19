@@ -2,52 +2,45 @@
 {% block title %}Register{% endblock %}
 {% block content %}
 
-<h1>Create an account</h1>
-<p class="subtitle">Register as a doctor</p>
-
-{% if messages %}
-<div class="messages">
-    {% for msg in messages %}
-    <p class="{{ msg.tags }}">{{ msg }}</p>
-    {% endfor %}
+<div class="mb-6 flex items-center justify-center">
+    <span class="text-lg font-bold tracking-tight text-gray-900">Clinical AI</span>
 </div>
-{% endif %}
 
-<form method="post" novalidate>
-    {% csrf_token %}
+<div class="card">
+    <h1 class="text-xl font-semibold text-gray-900">Create an account</h1>
+    <p class="mt-1 text-sm text-gray-600">Register as a doctor</p>
 
-    {% if form.non_field_errors %}
-    <ul class="errorlist">
-        {% for err in form.non_field_errors %}
-        <li>{{ err }}</li>
-        {% endfor %}
-    </ul>
-    {% endif %}
-
-    {% for field in form %}
-    <div class="form-group">
-        {{ field.label_tag }}
-        {{ field }}
-        {% if field.help_text %}
-        <small style="color:#65676b; font-size:0.75rem; display:block; margin-top:2px;">
-            {{ field.help_text }}
-        </small>
-        {% endif %}
-        {% if field.errors %}
+    <form method="post" novalidate class="mt-6">
+        {% csrf_token %}
+        {% if form.non_field_errors %}
         <ul class="errorlist">
-            {% for err in field.errors %}
+            {% for err in form.non_field_errors %}
             <li>{{ err }}</li>
             {% endfor %}
         </ul>
         {% endif %}
-    </div>
-    {% endfor %}
+        {% for field in form %}
+        <div class="mb-4">
+            {{ field.label_tag }}
+            {{ field }}
+            {% if field.help_text %}
+            <p class="mt-1 text-xs text-gray-500">{{ field.help_text|safe }}</p>
+            {% endif %}
+            {% if field.errors %}
+            <ul class="errorlist">
+                {% for err in field.errors %}
+                <li>{{ err }}</li>
+                {% endfor %}
+            </ul>
+            {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-primary w-full">Register</button>
+    </form>
 
-    <button type="submit" class="btn btn-primary">Register</button>
-</form>
-
-<div class="auth-footer">
-    Already have an account? <a href="{% url 'accounts:login' %}">Log in</a>
+    <p class="mt-6 text-center text-sm text-gray-600">
+        Already have an account? <a href="{% url 'accounts:login' %}" class="font-medium text-blue-600 hover:text-blue-700">Log in</a>
+    </p>
 </div>
 
 {% endblock %}

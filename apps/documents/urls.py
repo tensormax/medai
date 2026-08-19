@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.urls import path
 
 from . import views
@@ -37,17 +38,6 @@ urlpatterns = [
         views.analysis_detail,
         name="analysis_detail",
     ),
-    # Dev / log views — under api/ prefix
-    path(
-        "api/<int:pk>/chunks/",
-        views.chunk_inspection,
-        name="chunk_inspection",
-    ),
-    path(
-        "api/<int:pk>/deidentification/",
-        views.deidentification_inspection,
-        name="deidentification_inspection",
-    ),
     # Clinical document generation
     path(
         "patients/<int:patient_pk>/clinical/<str:doc_type>/",
@@ -80,3 +70,17 @@ urlpatterns = [
         name="clinical_document_list",
     ),
 ]
+
+if settings.DEBUG:
+    urlpatterns += [
+        path(
+            "api/<int:pk>/chunks/",
+            views.chunk_inspection,
+            name="chunk_inspection",
+        ),
+        path(
+            "api/<int:pk>/deidentification/",
+            views.deidentification_inspection,
+            name="deidentification_inspection",
+        ),
+    ]

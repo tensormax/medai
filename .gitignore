@@ -1,6 +1,10 @@
 # Environment variables
 .env
 
+.env
+.env.*
+!.env.example
+
 # Python / Bytecode
 __pycache__/
 *.py[cod]
@@ -13,11 +17,15 @@ venv/
 env/
 ENV/
 
+# Node
+node_modules/
+
 # Django / Database
 *.sqlite3
 *.log
 media/
 staticfiles/
+static/css/tailwind.css
 
 # IDE / OS specific
 .vscode/

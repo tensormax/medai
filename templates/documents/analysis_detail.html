@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Analysis for {{ document.title }}{% endblock %}
+{% block content %}
+
+<div class="mb-6">
+    <a href="{% url 'documents:document_list' patient_pk=document.patient.pk %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">← Back to documents</a>
+    <h1 class="mt-2 text-2xl font-semibold text-gray-900">{{ document.title }}</h1>
+    <p class="mt-1 text-sm text-gray-600">{{ document.get_doc_type_display }} &middot; de-identified: {{ document.de_identified|yesno:"yes,no" }}</p>
+</div>
+
+<div class="card space-y-5">
+    <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Summary</h2>
+        <p class="mt-1 text-sm text-gray-700">{{ analysis.llm_response_json.summary }}</p>
+    </div>
+    <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Key points</h2>
+        <ul class="mt-1 list-inside list-disc space-y-1 text-sm text-gray-700">
+            {% for point in analysis.llm_response_json.key_points %}
+            <li>{{ point }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+    {% if analysis.llm_response_json.query_answer %}
+    <div>
+        <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">Query answer</h2>
+        <p class="mt-1 text-sm text-gray-700">{{ analysis.llm_response_json.query_answer }}</p>
+    </div>
+    {% endif %}
+    <p class="text-xs text-gray-400">Created {{ analysis.created_at|date:"d/m/Y g:i A" }}.</p>
+</div>
+
+<div class="card mt-6">
+    <form method="post" action="{% url 'documents:analysis_detail' pk=document.pk %}" novalidate>
+        {% csrf_token %}
+        <div class="mb-4">
+            <label for="query" class="mb-1 block text-sm font-medium text-gray-700">Ask a question about this document</label>
+            <textarea id="query" name="query" rows="3" class="block w-full rounded-lg border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600" placeholder="e.g. What medication dosage is recommended?"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Ask</button>
+    </form>
+</div>
+
+{% endblock %}

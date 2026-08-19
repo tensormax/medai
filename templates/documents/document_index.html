@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+
+<div class="mb-6">
+    <h1 class="text-2xl font-semibold text-gray-900">Reports</h1>
+    <p class="mt-1 text-sm text-gray-600">All documents and generated reports</p>
+</div>
+
+<div class="card overflow-hidden p-0">
+    {% if documents %}
+    <ul class="divide-y divide-gray-100">
+        {% for document in documents %}
+        <li class="flex items-center justify-between gap-3 px-6 py-4">
+            <div class="min-w-0">
+                <p class="truncate text-sm font-medium text-gray-900">{{ document.title|default:"Untitled" }}</p>
+                <p class="text-xs text-gray-500">
+                    <a href="{% url 'patients:patient_detail' pk=document.patient.pk %}" class="font-medium text-gray-700 hover:text-blue-600">{{ document.patient.full_name }}</a>
+                    &middot; {{ document.get_kind_display }} &middot; {{ document.get_doc_type_display }}                     &middot; {{ document.uploaded_at|date:"d/m/Y" }}
+                    {% if document.de_identified %} &middot; de-identified{% endif %}
+                </p>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+                {% if document.kind == "uploaded" %}
+                <a href="{% url 'documents:chunk_inspection' pk=document.pk %}"
+                   class="btn btn-primary text-xs px-3 py-1.5 inline-flex items-center gap-1">
+                    {% include "partials/icon.html" with name="eye" class="h-3.5 w-3.5" %}
+                    Chunks
+                </a>
+                {% endif %}
+                {% if document.kind == "generated" %}
+                    {% with latest_analysis=document.analyses.first %}
+                    {% if latest_analysis and latest_analysis.pdf_file %}
+                    <a href="{% url 'documents:report_raw' pk=latest_analysis.pk %}" target="_blank"
+                       class="btn btn-primary text-xs px-3 py-1.5 inline-flex items-center gap-1">
+                        {% include "partials/icon.html" with name="eye" class="h-3.5 w-3.5" %}
+                        View
+                    </a>
+                    <a href="{% url 'documents:report_download' pk=latest_analysis.pk %}"
+                       class="btn btn-primary text-xs px-3 py-1.5 inline-flex items-center gap-1">
+                        {% include "partials/icon.html" with name="download" class="h-3.5 w-3.5" %}
+                        Download
+                    </a>
+                    {% elif latest_analysis %}
+                    <a href="{% url 'documents:report_detail' pk=latest_analysis.pk %}"
+                       class="btn btn-primary text-xs px-3 py-1.5 inline-flex items-center gap-1">
+                        {% include "partials/icon.html" with name="eye" class="h-3.5 w-3.5" %}
+                        View
+                    </a>
+                    {% endif %}
+                    {% endwith %}
+                {% endif %}
+            </div>
+        </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <div class="px-6 py-16 text-center">
+        <p class="text-sm text-gray-500">No documents yet.</p>
+        <a href="{% url 'patients:patient_list' %}" class="mt-3 inline-block text-sm font-medium text-blue-600 hover:text-blue-700">Open a patient to upload or generate a report</a>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

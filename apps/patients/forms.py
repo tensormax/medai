@@ -15,7 +15,10 @@ class PatientForm(forms.ModelForm):
             "address",
         ]
         widgets = {
-            "date_of_birth": forms.DateInput(attrs={"type": "date"}),
+            "date_of_birth": forms.DateInput(
+                attrs={"type": "date"},
+                format="%Y-%m-%d",
+            ),
             "address": forms.Textarea(attrs={"rows": 3}),
         }
 

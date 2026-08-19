@@ -1,3 +1,7 @@
+from datetime import timedelta
+
+from django.utils import timezone
+
 from apps.ai.facade import AIOrchestrator
 
 from .models import Visit, VisitMessage
@@ -10,7 +14,24 @@ def get_visit_or_404_for(doctor, visit_pk: int):
 
 
 def create_visit(patient, doctor):
-    return Visit.objects.create(patient=patient, doctor=doctor)
+    from apps.tasks.models import Task
+
+    visit = Visit.objects.create(patient=patient, doctor=doctor)
+
+    previous_visits = Visit.objects.filter(patient=patient, doctor=doctor).exclude(pk=visit.pk)
+    if previous_visits.exists():
+        last_visit = previous_visits.order_by("-started_at").first()
+        today_end = timezone.now().replace(hour=23, minute=59, second=59)
+        Task.objects.create(
+            doctor=doctor,
+            patient=patient,
+            linked_visit=last_visit,
+            title=f"Follow-up — {patient.full_name}",
+            notes=f"Follow-up after visit on {last_visit.started_at:%d/%m/%Y}.",
+            due_at=today_end,
+        )
+
+    return visit
 
 
 def post_message(visit: Visit, content: str):

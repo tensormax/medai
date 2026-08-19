@@ -1,4 +1,6 @@
+from django.conf import settings
 from django.db import models
+from pgvector.django import VectorField
 
 from apps.patients.models import Patient
 from apps.visits.models import Visit
@@ -27,6 +29,12 @@ class Document(models.Model):
         ("report", "Generated Report"),
         ("other", "Other"),
     ]
+    PROCESSING_STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("processing", "Processing"),
+        ("completed", "Completed"),
+        ("failed", "Failed"),
+    ]
 
     patient = models.ForeignKey(
         Patient, on_delete=models.CASCADE, related_name="documents"
@@ -43,6 +51,12 @@ class Document(models.Model):
     file = models.FileField(upload_to="patient_docs/%Y/%m/", blank=True, null=True)
     title = models.CharField(max_length=255, blank=True)
     de_identified = models.BooleanField(default=False)
+    processing_status = models.CharField(
+        max_length=12,
+        choices=PROCESSING_STATUS_CHOICES,
+        default="pending",
+    )
+    chunk_count = models.PositiveIntegerField(default=0)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -55,26 +69,60 @@ class Document(models.Model):
 class DocumentChunk(models.Model):
     """
     Text chunks used for the RAG pipeline (Feature B). The actual vector
-    lives in the external vector store (Chroma/FAISS) — embedding_id is
-    just a pointer, kept here for traceability so an analysis can cite
-    which chunk it came from.
+    lives in the external vector store — embedding_id is a pointer kept
+    here for traceability so an analysis can cite which chunk it came from.
+
+    patient is denormalized from document.patient for efficient vector
+    store queries without joins.
     """
 
     document = models.ForeignKey(
         Document, on_delete=models.CASCADE, related_name="chunks"
     )
+    patient = models.ForeignKey(
+        "patients.Patient",
+        on_delete=models.CASCADE,
+        related_name="chunks",
+        null=True,
+        blank=True,
+        help_text="Denormalized from document.patient for vector store queries",
+    )
     chunk_text = models.TextField()
     embedding_id = models.CharField(
-        max_length=255, help_text="Pointer into the external vector store"
+        max_length=255,
+        blank=True,
+        help_text="Pointer into the external vector store",
+    )
+    embedding = VectorField(
+        dimensions=settings.EMBEDDING_DIMENSIONS,
+        null=True,
+        blank=True,
+        help_text="pgvector embedding for semantic search",
     )
     chunk_index = models.PositiveIntegerField(default=0)
+    page_number = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text="Source page number in the original PDF",
+    )
+    section = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        help_text="Clinical section heading (e.g. Laboratory Results)",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ["chunk_index"]
 
     def __str__(self):
-        return f"Chunk {self.chunk_index} of document #{self.document_id}"
+        page = f" p.{self.page_number}" if self.page_number else ""
+        section = f" [{self.section}]" if self.section else ""
+        return (
+            f"Chunk {self.chunk_index}{section}{page} "
+            f"of document #{self.document_id}"
+        )
 
 
 class DocumentAnalysis(models.Model):
@@ -111,3 +159,50 @@ class DocumentAnalysis(models.Model):
 
     def __str__(self):
         return f"{self.get_analysis_type_display()} for document #{self.document_id}"
+
+
+class GeneratedClinicalDocument(models.Model):
+    """
+    Stores a deterministic, doctor-requested clinical document PDF
+    (consultation summary, prescription, medical certificate, referral letter).
+    """
+
+    DOC_TYPE_CHOICES = [
+        ("consultation_summary", "Visit / Consultation Summary"),
+        ("prescription", "Prescription"),
+        ("medical_certificate", "Medical Certificate"),
+        ("referral_letter", "Referral Letter"),
+    ]
+
+    patient = models.ForeignKey(
+        Patient, on_delete=models.CASCADE, related_name="clinical_documents"
+    )
+    doctor = models.ForeignKey(
+        "accounts.Doctor",
+        on_delete=models.CASCADE,
+        related_name="generated_clinical_documents",
+    )
+    visit = models.ForeignKey(
+        Visit,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="clinical_documents",
+    )
+    document_type = models.CharField(max_length=30, choices=DOC_TYPE_CHOICES)
+    title = models.CharField(max_length=255)
+    form_data = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Extra form fields supplied by the doctor (medications, diagnosis, specialist, etc.)",
+    )
+    pdf_file = models.FileField(
+        upload_to="clinical_docs/%Y/%m/", blank=True, null=True
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.get_document_type_display()} for {self.patient.full_name}"

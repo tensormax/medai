@@ -22,7 +22,7 @@
             {% include "partials/icon.html" with name="clipboard" class="h-5 w-5" %}
         </div>
         <div>
-            <p class="text-2xl font-semibold text-gray-900">{{ upcoming_tasks|length }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ followup_tasks|length }}</p>
             <p class="text-sm text-gray-600">Follow-ups</p>
         </div>
     </div>
@@ -39,17 +39,9 @@
 
 <div class="card mt-6">
     <h2 class="text-sm font-semibold uppercase tracking-wide text-gray-500">What would you like to review today?</h2>
-    <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div class="mt-4">
         <a href="{% url 'patients:patient_list' %}" class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600">
             Review a patient
-            {% include "partials/icon.html" with name="chevron-right" class="h-4 w-4" %}
-        </a>
-        <a href="{% url 'patients:patient_list' %}" class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600">
-            Check lab reports
-            {% include "partials/icon.html" with name="chevron-right" class="h-4 w-4" %}
-        </a>
-        <a href="{% url 'patients:patient_list' %}" class="flex items-center justify-between rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-700 transition hover:border-blue-600 hover:text-blue-600">
-            Start a visit
             {% include "partials/icon.html" with name="chevron-right" class="h-4 w-4" %}
         </a>
     </div>
@@ -66,13 +58,21 @@
             {% for task in today_tasks %}
             <li class="flex items-center justify-between py-3">
                 <div>
-                    <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
-                    <p class="text-xs text-gray-500">{{ task.patient.full_name }} &middot; {{ task.due_at|date:"g:i A" }}</p>
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
+                        {% if task.linked_visit %}
+                        <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">Follow-up</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-gray-500">{{ task.patient.full_name }} &middot; {{ task.due_at|date:"g:i A" }}{% if task.linked_visit %} &middot; Visit {{ task.linked_visit.started_at|date:"d/m/Y" }}{% endif %}</p>
                 </div>
-                <form action="{% url 'tasks:task_complete' pk=task.pk %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="text-xs font-medium text-blue-600 hover:text-blue-700">Mark completed</button>
-                </form>
+                <div class="flex items-center gap-3">
+                    <a href="{% url 'tasks:task_update' pk=task.pk %}" class="text-xs font-medium text-gray-500 hover:text-gray-700">Edit</a>
+                    <form action="{% url 'tasks:task_complete' pk=task.pk %}" method="post">
+                        {% csrf_token %}
+                        <button type="submit" class="text-xs font-medium text-blue-600 hover:text-blue-700">Mark completed</button>
+                    </form>
+                </div>
             </li>
             {% endfor %}
         </ul>
@@ -81,33 +81,34 @@
         {% endif %}
     </div>
 
+    {% if upcoming_tasks %}
     <div class="card">
         <div class="mb-4 flex items-center justify-between">
             <h2 class="section-title">Upcoming</h2>
-            <a href="{% url 'tasks:task_create' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">New task</a>
         </div>
-        {% if upcoming_tasks %}
         <ul class="divide-y divide-gray-100">
             {% for task in upcoming_tasks %}
             <li class="flex items-center justify-between py-3">
                 <div>
-                    <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
-                    <p class="text-xs text-gray-500">{{ task.patient.full_name }} &middot; {{ task.due_at|date:"M j, g:i A" }}</p>
+                    <div class="flex items-center gap-2">
+                        <p class="text-sm font-medium text-gray-900">{{ task.title }}</p>
+                        {% if task.linked_visit %}
+                        <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-600">Follow-up</span>
+                        {% endif %}
+                    </div>
+                    <p class="text-xs text-gray-500">{{ task.patient.full_name }} &middot; {{ task.due_at|date:"d/m g:i A" }}{% if task.linked_visit %} &middot; Visit {{ task.linked_visit.started_at|date:"d/m/Y" }}{% endif %}</p>
                 </div>
                 <a href="{% url 'tasks:task_update' pk=task.pk %}" class="text-xs font-medium text-gray-500 hover:text-gray-700">Edit</a>
             </li>
             {% endfor %}
         </ul>
-        {% else %}
-        <p class="text-sm text-gray-500">Nothing upcoming.</p>
-        {% endif %}
     </div>
+    {% endif %}
 </div>
 
 <div class="card mt-6">
     <div class="mb-4 flex items-center justify-between">
         <h2 class="section-title">Completed</h2>
-        <a href="{% url 'tasks:task_create' %}" class="text-sm font-medium text-blue-600 hover:text-blue-700">New task</a>
     </div>
     {% if completed_tasks %}
     <ul class="divide-y divide-gray-100">

@@ -11,21 +11,25 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
+
+os.environ["HF_HUB_OFFLINE"] = "1"
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "django-insecure-c1c-x_53$*&7)+zb2^dc$2w0118t6rvy40lk*mybq8@7*syx@$",
+)
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-c1c-x_53$*&7)+zb2^dc$2w0118t6rvy40lk*mybq8@7*syx@$'
+DEBUG = os.environ.get("DEBUG", "True").lower() in ("true", "1", "yes")
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = os.environ.get("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
 
 
 # Application definition
@@ -36,16 +40,19 @@ INSTALLED_APPS = [
     'apps.documents',
     'apps.tasks',
     'apps.visits',
+    'apps.ai',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -66,6 +73,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'apps.patients.context_processors.sidebar_patients',
             ],
         },
     },
@@ -79,8 +87,12 @@ WSGI_APPLICATION = 'myproject.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.environ.get('DB_NAME', 'medai_rag'),
+        'USER': os.environ.get('DB_USER', 'postgres'),
+        'PASSWORD': os.environ.get('DB_PASSWORD', ''),
+        'HOST': os.environ.get('DB_HOST', 'localhost'),
+        'PORT': os.environ.get('DB_PORT', '5432'),
     }
 }
 
@@ -115,13 +127,68 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Date/time display format (dd/mm/yyyy)
+DATE_FORMAT = 'd/m/Y'
+DATETIME_FORMAT = 'd/m/Y H:i'
+SHORT_DATE_FORMAT = 'd/m/Y'
+USE_L10N = False
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / "static"]
+STATIC_ROOT = BASE_DIR / "staticfiles"
+STORAGES = {
+    "default": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+        if not DEBUG
+        else "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
+# Media files (user uploads, generated PDFs)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # ── Authentication ────────────────────────────────────
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/accounts/profile/'
-LOGOUT_REDIRECT_URL = '/accounts/login/'
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "tasks:dashboard"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+# ── Security (production) ────────────────────────────
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "DENY"
+
+# ── AI: local semantic embeddings / vector store ──────
+RAG_EMBEDDINGS_ENABLED = True
+
+# ── pgvector dimensions ───────────────────────────────
+EMBEDDING_DIMENSIONS = 384
+
+# ── RAG retrieval ─────────────────────────────────────
+RAG_CANDIDATE_K = 20
+RAG_FINAL_K = 5
+RERANKER_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2"
+RAG_MAX_CONTEXT_CHARS = 6000
+RAG_EXPAND_NEIGHBORS = True
+RAG_ANSWERABILITY_RERANK_THRESHOLD = -15.0
+RAG_ANSWERABILITY_COSINE_THRESHOLD = 0.8
+
+# ── LLM configuration ──────────────────────────────────────
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+OPENROUTER_API_KEY_2 = os.environ.get("OPENROUTER_API_KEY_2", "")
+LLM_MODEL = "nvidia/nemotron-3.5-lightning:free"
+FALLBACK_LLM_MODEL = "z-ai/glm-5.2:free"

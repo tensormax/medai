@@ -1,150 +1,303 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}clinic_ai{% endblock %}</title>
+    <title>{% block title %}Clinical AI{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            background: #f0f2f5;
-            color: #1a1a2e;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem;
+        /* Sidebar transitions */
+        .sidebar { transition: width 200ms ease, transform 200ms ease; }
+        .sidebar-nav-label { transition: opacity 150ms ease, width 150ms ease; }
+        .sidebar-collapsed .sidebar-nav-label { opacity: 0; width: 0; overflow: hidden; }
+        .sidebar-expanded .sidebar-nav-label { opacity: 1; }
+        .main-content { transition: padding-left 200ms ease; }
+
+        /* Tooltip for collapsed nav */
+        .nav-tooltip {
+            position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+            margin-left: 8px; padding: 4px 10px; border-radius: 6px;
+            background: #1f2937; color: #fff; font-size: 0.75rem; font-weight: 500;
+            white-space: nowrap; pointer-events: none; opacity: 0;
+            transition: opacity 150ms ease; z-index: 50;
+            display: none;
         }
-        .auth-card {
-            background: #fff;
-            border-radius: 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,.08);
-            padding: 2.5rem 2rem;
-            width: 100%;
-            max-width: 400px;
-        }
-        .auth-card h1 {
-            font-size: 1.5rem;
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-            text-align: center;
-        }
-        .auth-card .subtitle {
-            color: #65676b;
-            font-size: 0.9rem;
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        .form-group label {
+        .nav-item-wrapper { position: relative; }
+        .sidebar-collapsed .nav-tooltip {
             display: block;
-            font-size: 0.85rem;
-            font-weight: 500;
-            margin-bottom: 0.3rem;
-            color: #333;
         }
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 0.65rem 0.75rem;
-            border: 1px solid #ccd0d5;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            transition: border-color .15s, box-shadow .15s;
+        .sidebar-collapsed .nav-item-wrapper:hover .nav-tooltip {
+            opacity: 1;
         }
-        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            outline: none;
-            border-color: #1877f2;
-            box-shadow: 0 0 0 3px rgba(24,119,242,.15);
+
+        /* Mobile overlay */
+        .sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+            z-index: 40; opacity: 0; pointer-events: none; transition: opacity 200ms ease;
         }
-        .btn {
-            display: inline-block;
-            width: 100%;
-            padding: 0.65rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .15s, opacity .15s;
-        }
-        .btn-primary {
-            background: #1877f2;
-            color: #fff;
-        }
-        .btn-primary:hover { background: #166fe5; }
-        .btn-primary:active { opacity: .9; }
-        .messages { margin-bottom: 1rem; }
-        .messages p {
-            padding: 0.6rem 0.8rem;
-            border-radius: 8px;
-            font-size: 0.85rem;
-        }
-        .messages .error   { background: #ffe6e6; color: #b00020; }
-        .messages .success { background: #e6ffe6; color: #1b7a1b; }
-        .messages .info    { background: #e6f0ff; color: #0044cc; }
-        .errorlist {
-            list-style: none;
-            margin-top: 0.3rem;
-            font-size: 0.8rem;
-            color: #b00020;
-        }
-        .auth-footer {
-            text-align: center;
-            margin-top: 1.2rem;
-            font-size: 0.88rem;
-        }
-        .auth-footer a {
-            color: #1877f2;
-            text-decoration: none;
-            font-weight: 500;
-        }
-        .auth-footer a:hover { text-decoration: underline; }
-        .top-bar {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            background: #fff;
-            border-bottom: 1px solid #e4e6eb;
-            padding: 0.75rem 1.5rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            box-shadow: 0 1px 4px rgba(0,0,0,.04);
-        }
-        .top-bar .brand { font-weight: 700; color: #1877f2; }
-        .top-bar a {
-            color: #1a1a2e;
-            text-decoration: none;
-            margin-left: 1rem;
-        }
-        .top-bar a:hover { color: #1877f2; }
+        .sidebar-overlay.active { opacity: 1; pointer-events: auto; }
+
+        /* Hide scrollbar in collapsed sidebar */
+        .sidebar-collapsed::-webkit-scrollbar { display: none; }
+        .sidebar-collapsed { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
     {% block extra_head %}{% endblock %}
 </head>
-<body>
+<body class="bg-gray-50 text-gray-900">
     {% if user.is_authenticated %}
-    <nav class="top-bar">
-        <span class="brand">clinic_ai</span>
-        <div>
-            <span>{{ user.username }}</span>
-            <a href="{% url 'tasks:dashboard' %}">Dashboard</a>
-            <a href="{% url 'accounts:profile' %}">Profile</a>
-            <form action="{% url 'accounts:logout' %}" method="post" style="display:inline">
-                {% csrf_token %}
-                <button type="submit" style="background:none;border:none;color:#1a1a2e;cursor:pointer;font:inherit;text-decoration:none;margin-left:1rem;">Log out</button>
-            </form>
+    {# Mobile overlay #}
+    <div id="sidebarOverlay" class="sidebar-overlay" onclick="closeMobileSidebar()"></div>
+
+    {# Sidebar #}
+    <aside id="sidebar"
+           class="sidebar sidebar-expanded fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white
+                  max-lg:-translate-x-full max-lg:shadow-lg">
+
+        {# Branding + collapse toggle #}
+        <div class="flex items-center justify-between px-5 py-5">
+            <div class="flex items-center">
+                <span class="sidebar-nav-label text-lg font-bold tracking-tight text-gray-900">Clinical AI</span>
+            </div>
+            {# Desktop collapse toggle #}
+            <button onclick="toggleSidebar()" class="hidden lg:flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600" title="Collapse sidebar">
+                {% include "partials/icon.html" with name="chevron-left" class="h-4 w-4 sidebar-collapse-icon" %}
+            </button>
+            {# Mobile close button #}
+            <button onclick="closeMobileSidebar()" class="lg:hidden h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600">
+                {% include "partials/icon.html" with name="x" class="h-4 w-4" %}
+            </button>
         </div>
-    </nav>
+
+        {# Navigation + Patient list wrapper #}
+        <div class="flex-1 flex flex-col min-h-0 mt-1">
+        {# Navigation #}
+        <nav class="flex-none space-y-1 px-3">
+            <div class="nav-item-wrapper group">
+                <a href="{% url 'tasks:dashboard' %}"
+                   class="nav-link {% if request.resolver_match.app_name == 'tasks' %}nav-link-active{% endif %}">
+                    {% include "partials/icon.html" with name="dashboard" class="h-5 w-5 shrink-0" %}
+                    <span class="sidebar-nav-label ml-3 text-sm">Dashboard</span>
+                </a>
+                <span class="nav-tooltip">Dashboard</span>
+            </div>
+            <div class="nav-item-wrapper group">
+                <a href="{% url 'patients:patient_list' %}"
+                   class="nav-link {% if request.resolver_match.app_name == 'patients' %}nav-link-active{% endif %}">
+                    {% include "partials/icon.html" with name="users" class="h-5 w-5 shrink-0" %}
+                    <span class="sidebar-nav-label ml-3 text-sm">Patients</span>
+                </a>
+                <span class="nav-tooltip">Patients</span>
+            </div>
+            <div class="nav-item-wrapper group">
+                <a href="{% url 'documents:document_index' %}"
+                   class="nav-link {% if request.resolver_match.app_name == 'documents' %}nav-link-active{% endif %}">
+                    {% include "partials/icon.html" with name="document" class="h-5 w-5 shrink-0" %}
+                    <span class="sidebar-nav-label ml-3 text-sm">Reports</span>
+                </a>
+                <span class="nav-tooltip">Reports</span>
+            </div>
+        </nav>
+
+        {# Patient chat list #}
+        {% if sidebar_patients %}
+        <div class="mt-4 flex flex-col flex-1 min-h-0 px-3 sidebar-nav-label">
+            <p class="px-1 mb-2 text-[10px] font-semibold uppercase tracking-wider text-blue-500">Recent Chats</p>
+            <div class="relative mb-2">
+                <input type="text" id="sidebarPatientSearch" placeholder="Search by name or ID..."
+                       class="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-900 placeholder-gray-400 outline-none focus:border-blue-400 focus:bg-white focus:ring-1 focus:ring-blue-400/20">
+            </div>
+            <div id="sidebarPatientList" class="flex-1 overflow-y-auto space-y-1 pb-2" style="scrollbar-width: thin;">
+                {% for p in sidebar_patients %}
+                <a href="{% url 'patients:patient_detail' pk=p.id %}"
+                   class="sidebar-patient-item flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors {% if active_patient_id == p.id %}bg-blue-50{% else %}hover:bg-gray-50{% endif %}"
+                   data-name="{{ p.full_name|lower }}"
+                   data-mrn="{{ p.mrn|lower }}">
+                    <div class="shrink-0">
+                        <div class="flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-semibold {% if active_patient_id == p.id %}bg-blue-600 text-white{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ p.full_name|slice:":1" }}
+                        </div>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <p class="text-xs font-semibold leading-tight {% if active_patient_id == p.id %}text-blue-700{% else %}text-gray-900{% endif %}">{{ p.full_name }}</p>
+                        <p class="text-[11px] text-gray-500 leading-tight">{{ p.age }} yrs &middot; {{ p.last_visit_text|truncatewords:5 }}</p>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        </div>
+
+        {# Doctor profile + logout area #}
+        <div class="border-t border-gray-200 px-4 py-4">
+            <div class="flex items-center gap-3">
+                {# Initials avatar #}
+                <a href="{% url 'accounts:profile' %}" class="sidebar-avatar shrink-0 flex h-9 w-9 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white hover:bg-blue-700 transition" title="Profile">
+                    {{ request.user.doctor_profile.full_name|truncatechars:1 }}
+                </a>
+                {# Name + actions (expanded only) #}
+                <div class="sidebar-nav-label min-w-0 flex-1">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ request.user.doctor_profile.full_name }}</p>
+                    <div class="mt-0.5 flex items-center gap-2">
+                        <a href="{% url 'accounts:profile' %}" class="text-xs font-medium text-blue-600 hover:text-blue-700">Profile</a>
+                        <form action="{% url 'accounts:logout' %}" method="post" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="text-xs font-medium text-gray-500 hover:text-gray-700">Log out</button>
+                        </form>
+                    </div>
+                </div>
+                {# Collapsed: show logout icon #}
+                <form action="{% url 'accounts:logout' %}" method="post" class="hidden sidebar-collapsed-only">
+                    {% csrf_token %}
+                    <button type="submit" class="flex h-8 w-8 items-center justify-center rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600" title="Log out">
+                        {% include "partials/icon.html" with name="logout" class="h-4 w-4" %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </aside>
+
+    {# Mobile hamburger button #}
+    <button onclick="openMobileSidebar()"
+            class="lg:hidden fixed top-4 left-4 z-30 flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-white shadow-sm text-gray-600 hover:text-gray-900">
+        {% include "partials/icon.html" with name="menu" class="h-5 w-5" %}
+    </button>
     {% endif %}
 
-    <div class="auth-card">
-        {% block content %}{% endblock %}
-    </div>
+    <main class="min-h-screen main-content {% if user.is_authenticated %}lg:pl-64{% endif %}">
+        <div class="p-6 md:p-8 {% if not user.is_authenticated %}mx-auto w-full max-w-md{% endif %}">
+            {% include "partials/messages.html" %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <script>
+    (function() {
+        const sidebar = document.getElementById('sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+        if (!sidebar) return;
+
+        // Disable transitions during initial apply so sidebar snaps into place
+        sidebar.style.transition = 'none';
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) mainContent.style.transition = 'none';
+        document.querySelectorAll('.sidebar-nav-label').forEach(function(el) {
+            el.style.transition = 'none';
+        });
+
+        const saved = localStorage.getItem('sidebar-collapsed');
+        if (saved === 'true' && window.innerWidth >= 1024) {
+            applyCollapsed();
+        } else if (window.innerWidth >= 1024) {
+            applyExpanded();
+        }
+
+        // Re-enable transitions after one frame
+        requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+                sidebar.style.transition = '';
+                if (mainContent) mainContent.style.transition = '';
+                document.querySelectorAll('.sidebar-nav-label').forEach(function(el) {
+                    el.style.transition = '';
+                });
+            });
+        });
+
+        // Initials avatar generation from full_name
+        function generateInitials(name) {
+            if (!name) return '?';
+            var parts = name.trim().split(/\s+/);
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+            }
+            return parts[0].substring(0, 2).toUpperCase();
+        }
+
+        var avatar = document.querySelector('.sidebar-avatar');
+        var fullName = '{{ request.user.doctor_profile.full_name|escapejs }}';
+        if (avatar && fullName) {
+            avatar.textContent = generateInitials(fullName);
+        }
+    })();
+
+    function applyCollapsed() {
+        var sidebar = document.getElementById('sidebar');
+        sidebar.classList.add('sidebar-collapsed');
+        sidebar.classList.remove('sidebar-expanded');
+        sidebar.style.width = '4.5rem';
+        document.querySelector('.main-content').style.paddingLeft = '';
+        document.querySelector('.main-content').classList.add('lg:!pl-[4.5rem]');
+        document.querySelector('.main-content').classList.remove('lg:!pl-64');
+        var icon = sidebar.querySelector('.sidebar-collapse-icon');
+        if (icon) icon.style.transform = 'rotate(180deg)';
+        sidebar.querySelectorAll('.sidebar-collapsed-only').forEach(function(el) { el.classList.remove('hidden'); });
+    }
+
+    function applyExpanded() {
+        var sidebar = document.getElementById('sidebar');
+        sidebar.classList.remove('sidebar-collapsed');
+        sidebar.classList.add('sidebar-expanded');
+        sidebar.style.width = '16rem';
+        document.querySelector('.main-content').classList.remove('lg:!pl-[4.5rem]');
+        document.querySelector('.main-content').classList.add('lg:!pl-64');
+        var icon = sidebar.querySelector('.sidebar-collapse-icon');
+        if (icon) icon.style.transform = '';
+        sidebar.querySelectorAll('.sidebar-collapsed-only').forEach(function(el) { el.classList.add('hidden'); });
+    }
+
+    function toggleSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var isCollapsed = sidebar.classList.contains('sidebar-collapsed');
+        if (isCollapsed) {
+            applyExpanded();
+            localStorage.setItem('sidebar-collapsed', 'false');
+        } else {
+            applyCollapsed();
+            localStorage.setItem('sidebar-collapsed', 'true');
+        }
+    }
+
+    function openMobileSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.remove('max-lg:-translate-x-full');
+        overlay.classList.add('active');
+    }
+
+    function closeMobileSidebar() {
+        var sidebar = document.getElementById('sidebar');
+        var overlay = document.getElementById('sidebarOverlay');
+        sidebar.classList.add('max-lg:-translate-x-full');
+        overlay.classList.remove('active');
+    }
+
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 1024) {
+            closeMobileSidebar();
+            var saved = localStorage.getItem('sidebar-collapsed');
+            if (saved === 'true') {
+                applyCollapsed();
+            } else {
+                applyExpanded();
+            }
+        }
+    });
+
+    // Sidebar patient search
+    var patientSearch = document.getElementById('sidebarPatientSearch');
+    var patientList = document.getElementById('sidebarPatientList');
+    if (patientSearch && patientList) {
+        patientSearch.addEventListener('input', function() {
+            var q = this.value.toLowerCase();
+            var items = patientList.querySelectorAll('.sidebar-patient-item');
+            items.forEach(function(item) {
+                var name = item.getAttribute('data-name') || '';
+                var mrn = item.getAttribute('data-mrn') || '';
+                item.style.display = (name.indexOf(q) !== -1 || mrn.indexOf(q) !== -1) ? '' : 'none';
+            });
+        });
+    }
+    </script>
 </body>
 </html>

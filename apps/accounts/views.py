@@ -6,6 +6,7 @@ from .forms import DoctorProfileForm, DoctorRegistrationForm
 
 
 def register(request):
+    #to register users
     if request.method == "POST":
         form = DoctorRegistrationForm(request.POST)
         if form.is_valid():
@@ -18,6 +19,7 @@ def register(request):
 
 @login_required
 def profile(request):
+    #to login after registration
     doctor = request.user.doctor_profile
     if request.method == "POST":
         form = DoctorProfileForm(request.POST, instance=doctor)
