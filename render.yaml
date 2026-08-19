@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: medai
+    runtime: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --no-input
+    startCommand: gunicorn myproject.wsgi:application
+    envVars:
+      - key: DEBUG
+        value: "0"
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: SECRET_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY_2
+        sync: false
+      - key: HF_HUB_OFFLINE
+        value: "1"
+      - key: TRANSFORMERS_OFFLINE
+        value: "1"
